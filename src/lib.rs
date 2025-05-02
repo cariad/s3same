@@ -1,5 +1,4 @@
 #[doc = include_str!("../README.md")]
-
 use std::{fs, io::Error, path::Path};
 
 pub trait LocalPath {
