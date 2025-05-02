@@ -1,0 +1,11 @@
+[package]
+authors = ["Cariad Eccleston <cariad@cariad.earth>"]
+description = "Compare AWS S3 objects"
+edition = "2021"
+license = "MIT"
+name = "s3same"
+readme = "README.md"
+repository = "https://github.com/cariad/s3same"
+version = "1.0.0-alpha.0"
+
+[dependencies]
