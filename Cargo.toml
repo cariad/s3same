@@ -9,3 +9,14 @@ repository = "https://github.com/cariad/s3same"
 version = "1.0.0-alpha.0"
 
 [dependencies]
+aws-config = "1.6.2"
+aws-sdk-s3 = "1.83.0"
+base64 = "0.22.1"
+crc64fast-nvme = "1.2.0"
+s3uri = "1.0.0-beta.7"
+sha2 = "0.10.9"
+tokio = { version = "1.44.2", features = ["full"] }
+
+[dev-dependencies]
+dotenv = "0.15.0"
+envish = "1.0.0-alpha.1"
