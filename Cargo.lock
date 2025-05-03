@@ -1895,7 +1895,6 @@ dependencies = [
  "dotenv",
  "envish",
  "s3uri",
- "sha2",
  "tokio",
 ]
 
