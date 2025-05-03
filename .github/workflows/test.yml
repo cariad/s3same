@@ -10,6 +10,7 @@ on:
 
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_DEFAULT_REGION: eu-west-1
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   CARGO_TERM_COLOR: always
 
@@ -47,7 +48,7 @@ jobs:
         run: ./download_test_files.sh
 
       - name: Test
-        run: cargo test --verbose
+        run: cargo test
 
       # The artifact doesn't get used; we're just checking if we can.
       - name: Package
