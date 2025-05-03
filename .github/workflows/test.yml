@@ -32,13 +32,17 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            test_files
+          key: ${{ runner.os }}-${{ hashFiles('.env', 'Cargo.lock') }}
 
       - name: Check
         run: cargo check --verbose
 
       - name: Analyze
         run: cargo clippy
+
+      - name: Download test files
+        run: ./download_test_files.sh
 
       - name: Test
         run: cargo test --verbose
