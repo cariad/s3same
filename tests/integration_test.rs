@@ -90,7 +90,12 @@ async fn test_object_checksum() {
 
     for case in make_crc64nvme_test_cases() {
         let uri = crc64nvme_prefix.join(&case.0);
-        let checksum = s3same::object_checksum(&client, &uri).await.unwrap().unwrap();
+
+        let checksum = s3same::object_checksum(&client, &uri)
+            .await
+            .unwrap()
+            .unwrap();
+
         let expect = Checksum::Crc64Nvme(case.1);
         assert_eq!(checksum, expect);
     }
