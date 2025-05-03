@@ -98,7 +98,7 @@ pub async fn object_checksum(
         },
         Err(err) => match err.into_service_error() {
             GetObjectAttributesError::NoSuchKey(_) => Err(format!("{} does not exist", uri)),
-            attr_err => Err(format!("attr_err ({})", attr_err.to_string())),
+            e => Err(format!("{:#?}", e)),
         },
     }
 }
