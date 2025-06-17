@@ -1,7 +1,17 @@
+use colog;
 use s3same::{Checksum, ChecksumType};
 use std::collections::HashMap;
 use std::env;
 use std::path::Path;
+use std::sync::Once;
+
+static INIT: Once = Once::new();
+
+fn init_logging() {
+    INIT.call_once(|| {
+        colog::init();
+    });
+}
 
 fn make_bucket() -> s3uri::S3Uri {
     let bucket = env::var_os("S3SAME_TEST_BUCKET").unwrap();
@@ -17,6 +27,7 @@ async fn make_client() -> aws_sdk_s3::Client {
 }
 
 fn make_crc64nvme_test_cases() -> HashMap<String, u64> {
+    init_logging();
     dotenv::dotenv().ok();
 
     let expr = r"S3SAME_TEST_(?<group>.+)_(?<key>.+)";
