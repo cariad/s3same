@@ -1,10 +1,12 @@
 #[doc = include_str!("../README.md")]
 use aws_sdk_s3::operation::get_object_attributes::GetObjectAttributesError;
+use errors::{AreSameError, ObjectChecksumError};
 use log::{debug, error};
 use std::io::Error;
 use std::path::Path;
 
 mod base64;
+mod errors;
 
 #[derive(Debug, PartialEq)]
 /// A computed checksum.
@@ -77,30 +79,37 @@ pub fn file_checksum(t: ChecksumType, path: &Path) -> Result<Checksum, Error> {
 pub async fn object_checksum(
     client: &aws_sdk_s3::Client,
     uri: &s3uri::S3Uri,
-) -> Result<Option<Checksum>, String> {
-    let response = client
-        .get_object_attributes()
-        .bucket(&uri.bucket)
-        .key(&uri.key)
-        .object_attributes(aws_sdk_s3::types::ObjectAttributes::Checksum)
-        .send()
-        .await;
+) -> Result<Option<Checksum>, ObjectChecksumError> {
+    match &uri.key {
+        Some(k) => {
+            let response = client
+                .get_object_attributes()
+                .bucket(&uri.bucket)
+                .key(k)
+                .object_attributes(aws_sdk_s3::types::ObjectAttributes::Checksum)
+                .send()
+                .await;
 
-    match response {
-        Ok(attributes) => match attributes.checksum {
-            Some(checksum_attribute) => match checksum_attribute.checksum_crc64_nvme {
-                Some(checksum_crc64_nvme) => match base64::to_u64(&checksum_crc64_nvme) {
-                    Ok(checksum) => Ok(Some(Checksum::Crc64Nvme(checksum))),
-                    Err(e) => Err(format!("{:#?}", e)),
+            match response {
+                Ok(attributes) => match attributes.checksum {
+                    Some(checksum_attribute) => match checksum_attribute.checksum_crc64_nvme {
+                        Some(checksum_crc64_nvme) => match base64::to_u64(&checksum_crc64_nvme) {
+                            Ok(checksum) => Ok(Some(Checksum::Crc64Nvme(checksum))),
+                            Err(e) => Err(e.into()),
+                        },
+                        None => Ok(None),
+                    },
+                    None => Ok(None),
                 },
-                None => Ok(None),
-            },
-            None => Ok(None),
-        },
-        Err(err) => match err.into_service_error() {
-            GetObjectAttributesError::NoSuchKey(_) => Err(format!("{} does not exist", uri)),
-            e => Err(format!("{:#?}", e)),
-        },
+                Err(err) => match err.into_service_error() {
+                    GetObjectAttributesError::NoSuchKey(_) => {
+                        Err(ObjectChecksumError::ObjectNotFound(uri.clone()))
+                    }
+                    e => Err(e.into()),
+                },
+            }
+        }
+        None => Err(ObjectChecksumError::UriHasNoKey(uri.clone())),
     }
 }
 
@@ -141,7 +150,7 @@ pub async fn are_same(
     client: &aws_sdk_s3::Client,
     local: &Path,
     remote: &s3uri::S3Uri,
-) -> Result<bool, String> {
+) -> Result<bool, AreSameError> {
     match object_checksum(client, remote).await {
         Ok(opt_checksum) => match opt_checksum {
             Some(remote_checksum) => {
@@ -153,7 +162,7 @@ pub async fn are_same(
                     }
                     Err(e) => {
                         error!("file_checksum failed ({e})");
-                        Err(e.to_string())
+                        Err(e.into())
                     }
                 }
             }
@@ -164,7 +173,7 @@ pub async fn are_same(
         },
         Err(e) => {
             error!("object_checksum failed ({e})");
-            Err(e)
+            Err(e.into())
         }
     }
 }
