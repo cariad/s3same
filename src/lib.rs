@@ -1,6 +1,6 @@
 #[doc = include_str!("../README.md")]
 use aws_sdk_s3::operation::get_object_attributes::GetObjectAttributesError;
-use log::debug;
+use log::{debug,error};
 use std::io::Error;
 use std::path::Path;
 
@@ -147,13 +147,22 @@ pub async fn are_same(
             Some(remote_checksum) => match file_checksum(checksum_type(&remote_checksum), local) {
                 Ok(local_checksum) => {
                     let same = remote_checksum == local_checksum;
-                    debug!("remote_checksum={remote_checksum:?}; local_checksum={local_checksum:?}; same={same}");
+                    debug!("{local:?}={local_checksum:?}; {remote}={remote_checksum:?}; same={same}");
                     Ok(same)
                 }
-                Err(e) => Err(e.to_string()),
+                Err(e) => {
+                    error!("file_checksum failed ({e})");
+                    Err(e.to_string())
+                }
             },
-            None => Ok(false),
+            None => {
+                debug!("{remote} has no checksum");
+                Ok(false)
+            }
         },
-        Err(e) => Err(e),
+        Err(e) => {
+            error!("object_checksum failed ({e})");
+            Err(e)
+        }
     }
 }
