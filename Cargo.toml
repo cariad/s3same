@@ -13,7 +13,8 @@ aws-sdk-s3 = "1.83.0"
 base64 = "0.22.1"
 crc64fast-nvme = "1.2.0"
 log = "0.4.27"
-s3uri = "1.0.0-beta.7"
+s3uri = "1.0.0-beta.9"
+thiserror = "2.0.12"
 
 [dev-dependencies]
 aws-config = "1.6.2"
