@@ -1,5 +1,6 @@
 #[doc = include_str!("../README.md")]
 use aws_sdk_s3::operation::get_object_attributes::GetObjectAttributesError;
+use log::debug;
 use std::io::Error;
 use std::path::Path;
 
@@ -144,7 +145,11 @@ pub async fn are_same(
     match object_checksum(client, remote).await {
         Ok(opt_checksum) => match opt_checksum {
             Some(remote_checksum) => match file_checksum(checksum_type(&remote_checksum), local) {
-                Ok(local_checksum) => Ok(remote_checksum == local_checksum),
+                Ok(local_checksum) => {
+                    let same = remote_checksum == local_checksum;
+                    debug!("remote_checksum={remote_checksum:?}; local_checksum={local_checksum:?}; same={same}");
+                    Ok(same)
+                }
                 Err(e) => Err(e.to_string()),
             },
             None => Ok(false),
